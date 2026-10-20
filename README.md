@@ -1,34 +1,27 @@
-# ResidueGuard
+# 🛡️ ResidueGuard
+**Predict Residue. Secure the Harvest.**
 
-ResidueGuard is a TanStack Start/React prototype for pre-harvest pesticide-residue workflow calculations, buyer review, and policy simulation.
+ResidueGuard is a B2B Agri-Tech SaaS prototype built for the **Krushi & Smart Campus Ideathon 2026** at Vemana Institute of Technology. It is a software-only pre-harvest compliance engine that predicts pesticide residue risks and calculates exact Minimum Safe Intervals (MSI) to prevent export rejections and retail downgrades for Farmer Producer Organizations (FPOs).
 
-## Development
+---
 
-```bash
-npm install
-npm run dev
-```
+## 🚨 The Problem
+Indian agriculture loses massive value due to pesticide residue rejections at international ports and organized retail warehouses. The core issue is **information asymmetry**. Maximum Residue Limits (MRLs) and Pre-Harvest Intervals (PHIs) are buried in unreadable regulatory PDFs. Farmers and FPOs have no predictive way to know if a spray schedule will pass compliance until it is too late. 
 
-Validation commands:
+## 💡 The Solution
+ResidueGuard is an automated compliance engine that shifts agriculture from **reactive loss** to **proactive compliance**. 
+* **Zero Hardware:** No IoT sensors or expensive drones required.
+* **Zero Behavior Change:** FPO field officers input a 30-second spray log.
+* **Predictive Output:** Calculates the exact wait time before harvest and generates a traceable QR code for buyers.
 
-```bash
-npm run typecheck
-node --experimental-strip-types --test src/lib/audit/audit.test.ts
-npm run build
-```
+---
 
-The full repository test command also runs the inherited platform/PWA tests from the uploaded workspace.
+## 🧪 The Science (First-Order Kinetics)
+Unlike static statutory labels that ignore actual dosage, ResidueGuard models exponential degradation using Foliar DT50 half-lives. The engine dynamically scales the waiting period based on the farmer's actual dose and the destination market's MRL.
 
-## Localization
-
-The interface supports English (`en`), Kannada (`kn`), and Hindi (`hi`). The selector persists the chosen language under `residueguard.lang`, falls back to English for missing messages, updates `document.documentElement.lang`, and does not alter scientific identifiers, stored business data, calculations, timestamps, or hashes.
-
-## Audit integrity model
-
-Buyer Audit uses a typed, browser-local demonstration chain under `residueguard.audit.v1`. Events contain a schema version, event ID, contiguous sequence, lot ID, event type, fixed UTC ISO timestamp, explicit anonymous actor fields, allowlisted payload, previous hash, and event hash. Hashes are computed with Web Crypto `crypto.subtle.digest("SHA-256", ...)` over `rg-audit-canon-1` canonical JSON: object keys are sorted recursively, array order is preserved, UTF-8 is hashed, and `eventHash` is excluded from the hashed content.
-
-Verification recomputes every digest and checks required fields, supported schema, lot scope, genesis, sequence continuity, duplicate IDs/sequences, previous-hash links, and the saved chain head. Viewing and verification do not append events; report export appends a business event and requires the existing chain to verify first. The tamper demonstration verifies an altered copy and never writes the altered record back to storage.
-
-This is a locally verifiable hash chain, not an independently protected production audit system. SHA-256 is a hash function, not encryption; it does not hide records, prove who performed an action, guarantee immutability, prove that residue values are truthful, or detect a wholesale replacement if an attacker can rewrite both the records and local checkpoint. Production-grade integrity would require authenticated server-side appends, transactional sequence/head protection, authorization, durable audit storage, and an externally protected checkpoint or signature service.
-
-The current prototype has no signed-in actor in the Buyer Audit workflow, so events explicitly record `anonymous` / `unauthenticated`. Demonstration events are synthetic and are not laboratory results, government approvals, certifications, or proof of compliance outside the application's existing calculation model.
+### The Minimum Safe Interval (MSI) Formula:
+```math
+k = \frac{\ln(2)}{DT50_{foliar}}
+Dose Adjustment = \frac{\ln(Dose_{actual} / Dose_{label})}{k}
+Market Adjustment = \max\left(0, \frac{\ln(MRL_{fssai} / MRL_{target})}{k}\right)
+MSI = \lceil PHI_{label} + Dose Adjustment + Market Adjustment \rceil
