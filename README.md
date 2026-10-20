@@ -25,3 +25,39 @@ k = \frac{\ln(2)}{DT50_{foliar}}
 Dose Adjustment = \frac{\ln(Dose_{actual} / Dose_{label})}{k}
 Market Adjustment = \max\left(0, \frac{\ln(MRL_{fssai} / MRL_{target})}{k}\right)
 MSI = \lceil PHI_{label} + Dose Adjustment + Market Adjustment \rceil
+
+
+Self-validating: At the label dose, the MSI mathematically reduces exactly to the official regulation.
+
+🛡️ Security & Auditability
+Built by Cybersecurity engineers. The Buyer Audit page includes a tamper-evident SHA-256 audit chain.
+Note: This is a locally verifiable hash chain to detect record alteration, not an immutable blockchain or proof of identity.
+
+🛠️ Tech Stack
+Frontend: React, TanStack Start, TypeScript
+
+Styling: Tailwind CSS v4, Lucide Icons, Recharts
+
+Security: Web Crypto API (SHA-256)
+
+Localization: English, Kannada (ಕನ್ನಡ), Hindi (हिंदी)
+
+🚀 Key Features
+FPO Dashboard: Dynamic compliance verdicts (Safe, Delay Harvest, Do Not Use).
+
+Market Switch Trap: Instantly visualizes how a chemical legal in India (Mancozeb) is banned in the EU.
+
+Buyer Audit: QR verification with source citations (CIB&RC & EFSA) and residue decay curves.
+
+Data Moat: A digitized database of verified crop-chemical records.
+
+👥 The Team
+Mayur Anand
+
+Anika Devalokam
+
+Keerthana
+
+Charitha
+
+Vemana Institute of Technology | Bengaluru
