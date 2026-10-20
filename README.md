@@ -19,12 +19,12 @@ ResidueGuard is an automated compliance engine that shifts agriculture from **re
 ## 🧪 The Science (First-Order Kinetics)
 Unlike static statutory labels that ignore actual dosage, ResidueGuard models exponential degradation using Foliar DT50 half-lives. The engine dynamically scales the waiting period based on the farmer's actual dose and the destination market's MRL.
 
-### The Minimum Safe Interval (MSI) Formula:
-```math
+The Minimum Safe Interval (MSI) Formula:
+
+```text
 k = ln(2) / DT50_foliar
-
 Dose Adjustment = ln(Dose_actual / Dose_label) / k
-
 Market Adjustment = max(0, ln(MRL_fssai / MRL_target) / k)
 
 MSI = ceil(PHI_label + Dose Adjustment + Market Adjustment)
+```
