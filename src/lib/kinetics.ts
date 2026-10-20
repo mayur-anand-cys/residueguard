@@ -2,15 +2,18 @@ export const CHEMICALS = {
   Azoxystrobin: { phi: 15, dt50: 10, mrl_fssai: 2.0, mrl_eu: 2.0, eu_approved: true },
   Mancozeb: { phi: 21, dt50: 2, mrl_fssai: 0.5, mrl_eu: 0.01, eu_approved: false },
   Carbendazim: { phi: 30, dt50: 14, mrl_fssai: 0.1, mrl_eu: 0.01, eu_approved: false },
+  Chlorpyrifos: { phi: 25, dt50: 12, mrl_fssai: 0.2, mrl_eu: 0.01, eu_approved: false },
+  Imidacloprid: { phi: 20, dt50: 8, mrl_fssai: 0.5, mrl_eu: 0.05, eu_approved: false },
+  Cypermethrin: { phi: 7, dt50: 5, mrl_fssai: 1.0, mrl_eu: 0.5, eu_approved: true }, 
 } as const;
 
 export type ChemicalName = keyof typeof CHEMICALS;
-export type CropName = "Grapes" | "Pomegranate";
+export type CropName = "Grapes" | "Pomegranate" | "Tomato" | "Chilli" | "Mango" | "Okra" | "Cotton";
 export type Market = "Domestic" | "EU";
 export type Verdict = "SAFE" | "DELAY_HARVEST" | "DO_NOT_USE";
 
 export const CHEMICAL_NAMES = Object.keys(CHEMICALS) as ChemicalName[];
-export const CROPS: CropName[] = ["Grapes", "Pomegranate"];
+export const CROPS: CropName[] = ["Grapes", "Pomegranate", "Tomato", "Chilli", "Mango", "Okra", "Cotton"];
 
 export interface ComplianceInput {
   crop: CropName;
@@ -42,14 +45,11 @@ export interface ComplianceResult {
 }
 
 const CROP_CODE: Record<CropName, string> = {
-  Grapes: "GRA",
-  Pomegranate: "POM",
+  Grapes: "GRA", Pomegranate: "POM", Tomato: "TOM", Chilli: "CHL", Mango: "MAN", Okra: "OKR", Cotton: "COT",
 };
 
 const CHEM_CODE: Record<ChemicalName, string> = {
-  Azoxystrobin: "AZOX",
-  Mancozeb: "MANC",
-  Carbendazim: "CARB",
+  Azoxystrobin: "AZOX", Mancozeb: "MANC", Carbendazim: "CARB", Chlorpyrifos: "CHLR", Imidacloprid: "IMID", Cypermethrin: "CYPE",
 };
 
 export function lotId(crop: CropName, chemical: ChemicalName, days: number): string {
@@ -61,7 +61,6 @@ export function decayConstant(dt50: number): number {
   return Math.log(2) / dt50;
 }
 
-/** Label dose is modeled as landing on the FSSAI MRL exactly at PHI, then first-order decay. */
 export function residueAt(
   chemical: ChemicalName,
   doseApplied: number,
@@ -132,7 +131,6 @@ export interface DecayPoint {
   residue: number;
 }
 
-/** Canonical Azoxystrobin audit curve: 1.5× label dose, crosses 2.0 mg/kg on day 21. */
 export function auditDecayCurve(): DecayPoint[] {
   const points: DecayPoint[] = [];
   for (let day = 0; day <= 30; day += 1) {
