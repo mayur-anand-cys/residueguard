@@ -22,6 +22,9 @@ Unlike static statutory labels that ignore actual dosage, ResidueGuard models ex
 ### The Minimum Safe Interval (MSI) Formula:
 ```math
 k = ln(2) / DT50_foliar
+
 Dose Adjustment = ln(Dose_actual / Dose_label) / k
+
 Market Adjustment = max(0, ln(MRL_fssai / MRL_target) / k)
+
 MSI = ceil(PHI_label + Dose Adjustment + Market Adjustment)
