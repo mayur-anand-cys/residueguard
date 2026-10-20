@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "ResidueGuard",
+      "hasCanvas": false,
+      "bodyTextLen": 1159,
+      "bodyTextHash": "47fdc39847a3b7d0aa55823b203fadca20bce157e6fb9837800fcdc09c9bada7",
+      "bodyTextPrefix": "ResidueGuard Pre-harvest residue intelligence VEMANA INSTITUTE O",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "ResidueGuard",
+      "hasCanvas": false,
+      "bodyTextLen": 1159,
+      "bodyTextHash": "47fdc39847a3b7d0aa55823b203fadca20bce157e6fb9837800fcdc09c9bada7",
+      "bodyTextPrefix": "ResidueGuard Pre-harvest residue intelligence VEMANA INSTITUTE O",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

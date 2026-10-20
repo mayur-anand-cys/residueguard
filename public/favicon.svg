@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="ResidueGuard">
+  <rect width="32" height="32" rx="7" fill="#0f172a"/>
+  <path fill="#059669" d="M16 4.2 25.2 7.8v8.2c0 5.8-3.7 9.7-9.2 11.6-5.5-1.9-9.2-5.8-9.2-11.6V7.8L16 4.2z"/>
+  <path d="M11.4 16.1 14.4 19.1 20.8 12.6" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

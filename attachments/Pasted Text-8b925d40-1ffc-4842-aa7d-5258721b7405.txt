@@ -1,0 +1,102 @@
+Build a complete, polished, responsive, single-page React web application called ResidueGuard. Use Tailwind CSS, TypeScript, Lucide-React icons, and Recharts. 
+
+APP CONTEXT:
+This is for the Krushi & Smart Campus Ideathon. ResidueGuard is a B2B Agri-Tech SaaS platform that predicts pesticide residue compliance before harvest using first-order chemical kinetics. 
+
+TEAM INFO:
+Mayur, Anika, Keerthana, Charitha. Vemana Institute of Technology.
+
+==================================================
+1. BRANDING & UI DESIGN SYSTEM
+==================================================
+- Visual Style: Premium enterprise B2B SaaS. Government Agri-Tech. Clean, clinical, authoritative.
+- Background: `bg-slate-50` (Light theme).
+- Cards: `bg-white` with `border border-slate-200` and `shadow-sm`.
+- Primary Accent: Emerald Green (`text-emerald-600`, `bg-emerald-600`).
+- Warning Accent: Amber (`bg-amber-50`, `text-amber-600`, `border-amber-200`).
+- Critical Accent: Rose (`bg-rose-50`, `text-rose-600`, `border-rose-200`).
+- Typography: Inter or system-sans. Use `uppercase tracking-wider text-xs font-semibold` for labels.
+- Architecture: DO NOT use React Router or Next.js multi-page routing. Build a single-page app with a top navigation bar that uses React `useState` to toggle between 4 tabs: "FPO Dashboard", "Buyer Audit", "Policy Simulator", and "Data Moat".
+
+==================================================
+2. CORE MATH & LOGIC ENGINE (MUST BE IMPLEMENTED)
+==================================================
+You must implement this exact logic in the "FPO Dashboard" tab. When a user changes an input, the verdict must recalculate instantly.
+
+Data Dictionary (Hardcode this exact data):
+const chemicals = {
+  "Azoxystrobin": { phi: 15, dt50: 10, mrl_fssai: 2.0, mrl_eu: 2.0, eu_approved: true },
+  "Mancozeb": { phi: 21, dt50: 2, mrl_fssai: 0.5, mrl_eu: 0.01, eu_approved: false },
+  "Carbendazim": { phi: 30, dt50: 14, mrl_fssai: 0.1, mrl_eu: 0.01, eu_approved: false }
+};
+
+Calculation Logic (Minimum Safe Interval):
+k = Math.log(2) / dt50
+dose_adj = Math.log(dose_applied / label_dose) / k
+market_adj = Math.max(0, Math.log(mrl_fssai / mrl_target) / k)
+MSI = Math.ceil(phi + dose_adj + market_adj)
+
+Verdict Logic:
+1. If Market is "EU" and eu_approved is false -> Verdict = "DO_NOT_USE" (Rose theme). Reason: "Banned in EU. Default MRL 0.01 mg/kg."
+2. If days_to_harvest < MSI -> Verdict = "DELAY_HARVEST" (Amber theme). Reason: `Wait ${MSI - days_to_harvest} more days. True MSI: ${MSI} days.`
+3. If days_to_harvest >= MSI -> Verdict = "SAFE" (Emerald theme).
+
+==================================================
+3. TAB 1: FPO DASHBOARD (The Hero View)
+==================================================
+- Top Header: "Kolar Horticulture FPO" with 4 KPI cards (Active Lots: 24, Safe Lots: 18, Delay Warnings: 4, Rejection Risks: 2).
+- Layout: Two-column grid (`grid-cols-1 lg:grid-cols-2`).
+- LEFT COLUMN: "Spray Log Form" card.
+  - Crop Dropdown (Grapes, Pomegranate).
+  - Chemical Dropdown (Azoxystrobin, Mancozeb, Carbendazim).
+  - Market Radio (Domestic / EU Export).
+  - Inputs: Dose Applied (default 1.5), Label Dose (default 1.0), Days to Harvest (default 10).
+  - Large Emerald Button: "Calculate Compliance".
+- RIGHT COLUMN: "Compliance Verdict" card.
+  - Must dynamically change colors based on the verdict logic above.
+  - Header: Big bold text (e.g., "DELAY HARVEST" or "DO NOT USE").
+  - Subtext: The MSI result and waiting days.
+  - "Explainable AI" box: Show a small breakdown of the math (e.g., "You applied 1.5x dose. First-order kinetics requires +6 days decay").
+  - Mock QR Code: Use a placeholder image or CSS to render a fake QR code with the text "Lot ID: RG-GRA-AZOX-10".
+
+==================================================
+4. TAB 2: BUYER AUDIT
+==================================================
+- Header: Big Emerald Green "Compliance Verified" badge with a ShieldCheck icon.
+- Lot Details Card: FPO Name, Crop, Chemical, Verified MSI.
+- Chart: Use Recharts to create a LineChart showing "Residue Decay (mg/kg)" over 30 days. 
+  - Draw a solid Red horizontal line for the "EU MRL Limit (2.0 mg/kg)".
+  - Show the curve (Azoxystrobin) dropping below the red line at Day 21.
+- Source Citations Box: "Data verified against CIB&RC Label and EFSA Foliar DT50."
+
+==================================================
+5. TAB 3: POLICY SIMULATOR (The Market Switch Trap)
+==================================================
+- Header: "Market Switch Simulator".
+- A visual toggle switch at the top: "Domestic (FSSAI)" <-> "EU Export".
+- Two cards side-by-side showing Azoxystrobin and Mancozeb.
+- When Toggle is Domestic: Both show "Safe / Compliant".
+- When Toggle is EU: 
+  - Azoxystrobin shows "Safe".
+  - Mancozeb flips to a massive RED "DO_NOT_USE" alert with text: "Mancozeb has no EU approval. Any detectable residue results in shipment rejection."
+
+==================================================
+6. TAB 4: DATA MOAT
+==================================================
+- Header: "Verified Crop-Chemical Database".
+- Search bar.
+- Data Table showing:
+  Columns: Crop | Active Ingredient | PHI (Days) | Foliar DT50 | EU MRL | EU Approved
+  Render the 3 hardcoded chemicals from Section 2.
+  Use green pills (bg-emerald-100 text-emerald-800) for "YES" and red pills (bg-rose-100 text-rose-800) for "NO" in the EU Approved column.
+
+==================================================
+7. POLISH & FOOTER
+==================================================
+- Add Lucide icons (ShieldAlert, CheckCircle, Database, QrCode).
+- Use a clean, sans-serif font. Ensure high contrast.
+- Add a subtle hover effect to buttons (`transition-all hover:scale-[1.02]`).
+- Footer (visible on all tabs): "ResidueGuard Prototype | Team: Mayur, Anika, Keerthana, Charitha | Vemana Institute of Technology | Krushi Ideathon 2026".
+- Disclaimer text in the footer: "Prototype uses synthetic data verified against CIB&RC and EFSA guidelines."
+
+Build this now as a single, complete, functioning React artifact.
