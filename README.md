@@ -1,5 +1,5 @@
 # 🛡️ ResidueGuard
-### Pre-Harvest Residue Intelligence & Cryptographic Traceability
+### Built by Team ResidueGuard | Krushi & Smart Campus Ideathon 2026
 
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -48,7 +48,7 @@ Unlike static statutory labels that ignore actual dosage, ResidueGuard models ex
 
 ## 💻 Local Setup & Running the Dashboard
 
-Follow these exact steps to run the ResidueGuard dashboard on your local machine using **VS Code** or **PowerShell**.
+Follow these exact steps to run the ResidueGuard dashboard on your local machine. *These instructions are specifically tailored for Windows PowerShell/VS Code users to bypass common Windows execution errors.*
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) installed on your system.
@@ -56,10 +56,10 @@ Follow these exact steps to run the ResidueGuard dashboard on your local machine
 
 ### Step 1: Open the Project
 1. Open VS Code.
-2. Go to **File > Open Folder...** and select the `residueguard` folder. *(Make sure you open the folder containing `package.json`, not just a random Pictures folder).*
-3. Open the integrated terminal by pressing `` Ctrl + ` `` (Windows) or `` Cmd + ` `` (Mac).
+2. Go to **File > Open Folder...** and select the `residueguard` folder.
+3. Open the integrated terminal by pressing `` Ctrl + ` `` (Windows).
 
-### Step 2: Install Dependencies
-Run the following command in the terminal:
-```bash
-npm install
+### Step 2: Bypass PowerShell Script Restrictions (Windows Only)
+Windows PowerShell blocks scripts by default, which will cause `npm` and `npx` to fail. Run this exact command in your terminal first:
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
