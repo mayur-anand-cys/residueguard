@@ -40,3 +40,24 @@ Unlike static statutory labels that ignore actual dosage, ResidueGuard models ex
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/mayur-anand-cys/residueguard.git
+
+
+---
+
+## 💻 Local Setup & Running the Dashboard
+
+Follow these exact steps to run the ResidueGuard dashboard on your local machine using **VS Code** or **PowerShell**.
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) installed on your system.
+- A code editor like [VS Code](https://code.visualstudio.com/).
+
+### Step 1: Open the Project
+1. Open VS Code.
+2. Go to **File > Open Folder...** and select the `residueguard` folder. *(Make sure you open the folder containing `package.json`, not just the Pictures or Downloads folder).*
+3. Open the integrated terminal by pressing `` Ctrl + ` `` (Windows) or `` Cmd + ` `` (Mac).
+
+### Step 2: Install Dependencies
+Run the following command in the terminal:
+```bash
+npm install
