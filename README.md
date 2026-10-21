@@ -76,6 +76,9 @@ To bypass any custom wrapper script errors (like spawn vite ENOENT), use this di
 ```powershell
 npx vite --host 0.0.0.0 --port 8080
 ```
+```powershell
+node node_modules/vite/bin/vite.js --host 0.0.0.0 --port 8080
+```
 ### Step 5: Open the Dashboard
 Once the terminal displays VITE ready in XXX ms, open your web browser (Chrome, Edge, etc.) and navigate to:
 
