@@ -116,8 +116,6 @@ export function ResidueGuard() {
   const [tab, setTab] = useState<TabId>("dashboard");
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [pulse, setPulse] = useState(0);
-
-  // NEW: Role-Based Access Control (RBAC) State
   const [role, setRole] = useState<'fpo' | 'auditor'>('fpo');
 
   const parsed = useMemo(() => readForm(form), [form]);
@@ -138,46 +136,24 @@ export function ResidueGuard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            
-            {/* NEW: RBAC Toggle */}
             <div className="hidden sm:flex items-center bg-slate-100 rounded-lg p-1 text-xs font-semibold">
-              <button 
-                onClick={() => setRole('fpo')} 
-                className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${role === 'fpo' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}
-              >
+              <button onClick={() => setRole('fpo')} className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${role === 'fpo' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}>
                 <Sprout className="h-3 w-3" /> FPO Manager
               </button>
-              <button 
-                onClick={() => { setRole('auditor'); setTab('audit'); }} 
-                className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${role === 'auditor' ? 'bg-white shadow text-blue-700' : 'text-slate-500 hover:text-slate-700'}`}
-              >
+              <button onClick={() => { setRole('auditor'); setTab('audit'); }} className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${role === 'auditor' ? 'bg-white shadow text-blue-700' : 'text-slate-500 hover:text-slate-700'}`}>
                 <User className="h-3 w-3" /> EU Auditor
               </button>
             </div>
-
             <LanguageSwitch />
           </div>
         </div>
         <nav className="mx-auto grid max-w-6xl grid-cols-2 gap-2 px-4 pb-3 sm:flex" aria-label={t("nav.primary")}>
           {TABS.map((item) => {
-            // Hide Dashboard if the role is Auditor
             if (role === 'auditor' && item.id === 'dashboard') return null;
-            
             const active = tab === item.id;
             const Icon = item.icon;
             return (
-              <button
-                key={item.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setTab(item.id)}
-                className={
-                  "flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors sm:justify-start " +
-                  (active
-                    ? "bg-emerald-600 text-white"
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100")
-                }
-              >
+              <button key={item.id} type="button" aria-pressed={active} onClick={() => setTab(item.id)} className={"flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors sm:justify-start " + (active ? "bg-emerald-600 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100")}>
                 <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                 {t(item.labelKey)}
               </button>
@@ -188,20 +164,7 @@ export function ResidueGuard() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         {tab === "dashboard" ? (
-          <Dashboard
-            form={form}
-            setForm={setForm}
-            result={result}
-            error={parsed.ok ? null : t(parsed.error as MessageKey)}
-            pulse={pulse}
-            onCalculate={() => {
-              setPulse((n) => n + 1);
-              document.getElementById("compliance-verdict")?.scrollIntoView({
-                behavior: "smooth",
-                block: "nearest",
-              });
-            }}
-          />
+          <Dashboard form={form} setForm={setForm} result={result} error={parsed.ok ? null : t(parsed.error as MessageKey)} pulse={pulse} onCalculate={() => { setPulse((n) => n + 1); document.getElementById("compliance-verdict")?.scrollIntoView({ behavior: "smooth", block: "nearest" }); }} />
         ) : null}
         {tab === "audit" ? <BuyerAudit /> : null}
         {tab === "policy" ? <PolicySimulator /> : null}
@@ -218,26 +181,10 @@ export function ResidueGuard() {
   );
 }
 
-function Dashboard({
-  form,
-  setForm,
-  result,
-  error,
-  pulse,
-  onCalculate,
-}: {
-  form: FormState;
-  setForm: (next: FormState) => void;
-  result: ComplianceResult | null;
-  error: string | null;
-  pulse: number;
-  onCalculate: () => void;
-}) {
+function Dashboard({ form, setForm, result, error, pulse, onCalculate }: { form: FormState; setForm: (next: FormState) => void; result: ComplianceResult | null; error: string | null; pulse: number; onCalculate: () => void; }) {
   const { t } = useTranslation();
   const spec = CHEMICALS[form.chemical];
   const [expandedKpi, setExpandedKpi] = useState<keyof typeof MOCK_LOTS | null>(null);
-  
-  // NEW: Environmental Weather State
   const [weather, setWeather] = useState("normal");
 
   return (
@@ -262,20 +209,10 @@ function Dashboard({
             <button onClick={() => setExpandedKpi(null)} className="text-slate-400 hover:text-slate-700"><X className="h-5 w-5"/></button>
           </div>
           <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase text-slate-500">
-                <th className="pb-2">Lot ID</th>
-                <th className="pb-2">Crop</th>
-                <th className="pb-2">Status</th>
-              </tr>
-            </thead>
+            <thead><tr className="border-b border-slate-200 text-xs uppercase text-slate-500"><th className="pb-2">Lot ID</th><th className="pb-2">Crop</th><th className="pb-2">Status</th></tr></thead>
             <tbody>
               {MOCK_LOTS[expandedKpi].map(lot => (
-                <tr key={lot.id} className="border-b border-slate-100">
-                  <td className="py-3 font-mono font-medium">{lot.id}</td>
-                  <td className="py-3">{lot.crop}</td>
-                  <td className="py-3">{lot.status}</td>
-                </tr>
+                <tr key={lot.id} className="border-b border-slate-100"><td className="py-3 font-mono font-medium">{lot.id}</td><td className="py-3">{lot.crop}</td><td className="py-3">{lot.status}</td></tr>
               ))}
             </tbody>
           </table>
@@ -286,39 +223,24 @@ function Dashboard({
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">{t("form.title")}</h2>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />{t("form.live")}
-            </span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-600" aria-hidden="true" />{t("form.live")}</span>
           </div>
 
           <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); onCalculate(); }}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <FieldLabel htmlFor="crop">{t("form.crop")}</FieldLabel>
-                <select id="crop" className={CONTROL} value={form.crop} onChange={(event) => setForm({ ...form, crop: event.target.value as CropName })}>
-                  {CROPS.map(crop => <option key={crop} value={crop}>{crop}</option>)}
-                </select>
-              </div>
-              <div>
-                <FieldLabel htmlFor="chemical">{t("form.chemical")}</FieldLabel>
-                <select id="chemical" className={CONTROL} value={form.chemical} onChange={(event) => setForm({ ...form, chemical: event.target.value as ChemicalName })}>
-                  {CHEMICAL_NAMES.map(name => <option key={name} value={name}>{name}</option>)}
-                </select>
-              </div>
+              <div><FieldLabel htmlFor="crop">{t("form.crop")}</FieldLabel><select id="crop" className={CONTROL} value={form.crop} onChange={(event) => setForm({ ...form, crop: event.target.value as CropName })}>{CROPS.map(crop => <option key={crop} value={crop}>{crop}</option>)}</select></div>
+              <div><FieldLabel htmlFor="chemical">{t("form.chemical")}</FieldLabel><select id="chemical" className={CONTROL} value={form.chemical} onChange={(event) => setForm({ ...form, chemical: event.target.value as ChemicalName })}>{CHEMICAL_NAMES.map(name => <option key={name} value={name}>{name}</option>)}</select></div>
             </div>
 
             <fieldset>
               <legend className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">{t("form.market")}</legend>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {(["Domestic", "EU", "US_FDA", "Japan"] as const).map((value) => {
-                  const selected = form.market === value;
-                  return (
-                    <label key={value} className={"flex min-h-11 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold " + (selected ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-white text-slate-600")}>
-                      <input type="radio" name="market" className="sr-only" checked={selected} onChange={() => setForm({ ...form, market: value as Market })} />
-                      {value === "Domestic" ? "FSSAI" : value.replace("_", " ")}
-                    </label>
-                  );
-                })}
+                {(["Domestic", "EU", "US_FDA", "Japan"] as const).map((value) => (
+                  <label key={value} className={"flex min-h-11 cursor-pointer items-center justify-center rounded-lg border text-xs font-semibold " + (form.market === value ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-white text-slate-600")}>
+                    <input type="radio" name="market" className="sr-only" checked={form.market === value} onChange={() => setForm({ ...form, market: value as Market })} />
+                    {value === "Domestic" ? "FSSAI" : value.replace("_", " ")}
+                  </label>
+                ))}
               </div>
             </fieldset>
 
@@ -328,7 +250,6 @@ function Dashboard({
               <NumberField id="days-to-harvest" label={t("form.days")} value={form.daysToHarvest} step="1" onChange={(daysToHarvest) => setForm({ ...form, daysToHarvest })} />
             </div>
 
-            {/* NEW: Environmental Modifier */}
             <div>
               <FieldLabel htmlFor="weather">Environmental Decay Modifier (Field vs Lab)</FieldLabel>
               <select id="weather" value={weather} onChange={(e) => setWeather(e.target.value)} className={CONTROL}>
@@ -338,13 +259,11 @@ function Dashboard({
               </select>
             </div>
 
-            {/* NEW: Receipt Upload UI */}
             <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center cursor-pointer hover:bg-slate-100 transition-colors">
               <p className="text-sm font-semibold text-slate-700">📸 Attach Pesticide Receipt (Optional)</p>
               <p className="text-xs text-slate-500 mt-1">Upload photo for anti-fraud OCR verification</p>
             </div>
 
-            {/* NEW: Cumulative Load Warning */}
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
               <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
@@ -352,16 +271,15 @@ function Dashboard({
                 <p className="text-xs text-amber-800">System detected a previous spray on this Lot ID 7 days ago. Additive toxicity rules applied to final MSI calculation.</p>
               </div>
             </div>
-                            {/* NEW: FPO Inventory Discrepancy Alert */}
+
             <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 flex items-start gap-2">
               <Database className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-rose-900">Inventory Discrepancy Alert</p>
-                <p className="text-xs text-rose-800">
-                  FPO procurement shows <strong>150L of Mancozeb</strong> purchased, but only <strong>40L</strong> is logged across all farmers. 110L is unaccounted for. <em>Lot flagged for physical inspection.</em>
-                </p>
+                <p className="text-xs text-rose-800">FPO procurement shows <strong>150L of Mancozeb</strong> purchased, but only <strong>40L</strong> is logged across all farmers. 110L is unaccounted for. <em>Lot flagged for physical inspection.</em></p>
               </div>
             </div>
+
             <dl className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm sm:grid-cols-4">
               <SpecItem label={t("form.phi")} value={`${spec.phi} d`} />
               <SpecItem label={t("form.dt50")} value={`${spec.dt50} d`} />
@@ -369,9 +287,7 @@ function Dashboard({
               <SpecItem label={t("form.euStatus")} value={spec.eu_approved ? t("form.approved") : t("form.notApproved")} />
             </dl>
 
-            <button type="submit" className="btn-lift min-h-11 w-full rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700">
-              {t("form.calculate")}
-            </button>
+            <button type="submit" className="btn-lift min-h-11 w-full rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700">{t("form.calculate")}</button>
           </form>
         </section>
 
@@ -409,9 +325,7 @@ function VerdictCard({ result, error, pulse, weather }: { result: ComplianceResu
       </div>
 
       <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
-        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-          <FlaskConical className="h-4 w-4" aria-hidden="true" />{t("verdict.explain")}
-        </div>
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500"><FlaskConical className="h-4 w-4" aria-hidden="true" />{t("verdict.explain")}</div>
         <p className="text-sm font-medium text-slate-900">{result.verdict === "DO_NOT_USE" ? reason : narrative}</p>
         {result.verdict === "DO_NOT_USE" ? <p className="mt-1 text-sm text-slate-600">{t("verdict.noAuth")}</p> : null}
         
@@ -421,12 +335,10 @@ function VerdictCard({ result, error, pulse, weather }: { result: ComplianceResu
           <div className="flex justify-between gap-3"><dt>{t("verdict.doseAdj")}</dt><dd>{result.doseAdj >= 0 ? "+" : ""}{formatFixed(result.doseAdj, 2)} days</dd></div>
           <div className="flex justify-between gap-3"><dt>{t("verdict.marketAdj")}</dt><dd>+{formatFixed(result.marketAdj, 2)} days</dd></div>
           
-          {/* NEW: Environmental Weather Modifier */}
           <div className="flex justify-between gap-3 text-blue-600 font-semibold">
             <dt>Environmental Modifier (Rain/UV)</dt>
             <dd>{weather === 'normal' ? '0.00' : '-1.50'} days</dd>
           </div>
-
           <div className="flex justify-between gap-3 text-amber-600 font-semibold">
             <dt>ResidueGuard Safety Buffer</dt>
             <dd>+2.00 days</dd>
@@ -444,12 +356,7 @@ function VerdictCard({ result, error, pulse, weather }: { result: ComplianceResu
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500"><QrCode className="h-4 w-4" />Lot passport</div>
           <p className="text-sm font-semibold text-slate-900">{t("verdict.lotId")}: {result.lotId}</p>
-          
-          {/* NEW: Hash Payload Displayed for the Auditor */}
-          <p className="text-[10px] font-mono text-slate-500 mt-1 break-all bg-slate-100 p-1.5 rounded">
-            Payload SHA-256: 8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4
-          </p>
-          
+          <p className="text-[10px] font-mono text-slate-500 mt-1 break-all bg-slate-100 p-1.5 rounded">Payload SHA-256: 8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4</p>
           <p className="mt-1 text-xs text-slate-500">{result.verdict === "SAFE" ? t("verdict.attach") : t("verdict.hold")}</p>
         </div>
       </div>
@@ -495,9 +402,7 @@ function BuyerAudit() {
     } finally { setBusy(false); }
   };
 
-  const exportPdf = () => {
-    window.print();
-  };
+  const exportPdf = () => { window.print(); };
 
   const tamperDemo = async () => {
     if (!store || store.events.length < 2) return;
@@ -526,10 +431,7 @@ function BuyerAudit() {
       <div className="flex flex-col gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white"><ShieldCheck className="h-7 w-7" /></span>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800">{t("audit.kicker")}</p>
-            <h1 className="text-2xl font-extrabold tracking-tight text-emerald-700 sm:text-3xl">{t("audit.title")}</h1>
-          </div>
+          <div><p className="text-xs font-semibold uppercase tracking-wider text-emerald-800">{t("audit.kicker")}</p><h1 className="text-2xl font-extrabold tracking-tight text-emerald-700 sm:text-3xl">{t("audit.title")}</h1></div>
         </div>
         <p className="text-sm font-semibold text-emerald-900">{t("audit.lotId")}: {AUDIT_LOT.lotId}</p>
       </div>
@@ -538,16 +440,13 @@ function BuyerAudit() {
       
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-          <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5" /> Anti-Fraud Verification
-          </h3>
+          <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider mb-3 flex items-center gap-2"><ShieldCheck className="h-5 w-5" /> Anti-Fraud Verification</h3>
           <ul className="space-y-2 text-sm text-emerald-800">
             <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> <strong>Receipt OCR Match:</strong> Invoice #IN-8842 Verified</li>
             <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> <strong>Weather API Check:</strong> No heavy rain on spray date</li>
             <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> <strong>SHA-256 Chain:</strong> Immutable log intact</li>
           </ul>
         </div>
-
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-5 shadow-sm flex flex-col justify-center">
           <p className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Financial Risk Avoided</p>
           <h3 className="text-3xl font-extrabold text-blue-900">₹14,50,000</h3>
@@ -586,7 +485,6 @@ function BuyerAudit() {
             {verification?.failureCode ? <p className="mt-2 text-sm font-medium">{t(`audit.fail.${verification.failureCode}` as MessageKey)}</p> : null}
             {verification?.firstInvalidSequence ? <p className="mt-1 text-sm">{t("audit.sequence")}: {verification.firstInvalidSequence}</p> : null}
           </div>
-          
           <div className="flex flex-wrap gap-2 print:hidden">
             <button type="button" disabled={loading || busy || !store?.events.length} onClick={() => void runVerification()} className="min-h-11 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{busy ? t("audit.working") : t("audit.verify")}</button>
             <button type="button" disabled={loading || busy || !store?.events.length} onClick={() => void tamperDemo()} className="min-h-11 rounded-lg border border-rose-300 bg-white px-3 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50">{t("audit.tamper")}</button>
@@ -607,9 +505,7 @@ function BuyerAudit() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">{t("audit.history")}</h2>
           <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={busy || !store?.events.length} onClick={exportPdf} className="min-h-11 rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50 flex items-center gap-2">
-              <FileText className="h-4 w-4"/> Export PDF
-            </button>
+            <button type="button" disabled={busy || !store?.events.length} onClick={exportPdf} className="min-h-11 rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50 flex items-center gap-2"><FileText className="h-4 w-4"/> Export PDF</button>
             <button type="button" disabled={!store?.events.length} onClick={() => setShowHistory((value) => !value)} className="min-h-11 rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">{showHistory ? t("audit.hideHistory") : t("audit.history")}</button>
           </div>
         </div>
@@ -627,10 +523,7 @@ function AuditHistory({ events, onCopy }: { events: AuditEvent[]; onCopy: (hash:
       {events.map((event) => (
         <article key={event.eventId} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">{t(`audit.event.${event.eventType}` as MessageKey)}</p>
-              <p className="mt-1 text-xs text-slate-500">{formatUtcTimestamp(event.timestamp, lang)} · {t("audit.actor")}: {t("audit.anonymous")}</p>
-            </div>
+            <div><p className="text-sm font-semibold text-slate-900">{t(`audit.event.${event.eventType}` as MessageKey)}</p><p className="mt-1 text-xs text-slate-500">{formatUtcTimestamp(event.timestamp, lang)} · {t("audit.actor")}: {t("audit.anonymous")}</p></div>
             <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">{t("audit.sequence")} {event.sequence}</span>
           </div>
           <dl className="mt-3 space-y-2 text-xs">
@@ -648,10 +541,8 @@ function DecayChart() {
   const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const data = useMemo(() => auditDecayCurve(), []);
-
   useEffect(() => { setReady(true); }, []);
   if (!ready) return <div className="h-80 rounded-lg bg-slate-100" aria-hidden="true" />;
-
   const day21 = data.find((point) => point.day === 21);
 
   return (
@@ -662,10 +553,8 @@ function DecayChart() {
           <XAxis dataKey="day" tick={{ fill: "var(--color-slate-500)", fontSize: 12 }} stroke="var(--color-slate-300)" tickLine={false} />
           <YAxis domain={[0, 10]} tick={{ fill: "var(--color-slate-500)", fontSize: 12 }} stroke="var(--color-slate-300)" tickLine={false} width={36} />
           <Tooltip formatter={(value) => [`${Number(value).toFixed(2)} mg/kg`, t("audit.tooltipResidue")]} labelFormatter={(label) => t("audit.day", { day: label })} />
-          
           <ReferenceLine y={2.0} stroke="var(--color-emerald-600)" strokeWidth={2} strokeDasharray="3 3" label={{ position: 'insideBottomRight', value: 'FSSAI (2.0)', fill: 'var(--color-emerald-600)', fontSize: 10 }} />
           <ReferenceLine y={0.01} stroke="var(--color-rose-600)" strokeWidth={2} strokeDasharray="3 3" label={{ position: 'insideTopRight', value: 'EU (0.01)', fill: 'var(--color-rose-600)', fontSize: 10 }} />
-          
           {day21 ? <ReferenceDot x={21} y={day21.residue} r={5} fill="var(--color-emerald-600)" stroke="white" strokeWidth={2} /> : null}
           <Line type="monotone" dataKey="residue" name={t("audit.residue")} stroke="var(--color-emerald-600)" strokeWidth={2.5} dot={false} />
         </LineChart>
@@ -698,12 +587,10 @@ function PolicySimulator() {
         <p className="mt-1 max-w-2xl text-sm text-slate-600">The same spray can be legal at the farm gate and rejected at the port. See all markets at once.</p>
       </div>
 
-      {/* Main Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {markets.map((market) => (
           <div key={market.id} className="flex flex-col gap-3">
             <h3 className="text-center font-bold text-slate-800 bg-slate-100 py-2 rounded-t-lg border border-slate-200 border-b-0">{market.label}</h3>
-            
             {chemicals.map((chem) => {
               const isSafe = chem.status[market.id as keyof typeof chem.status];
               return (
@@ -714,9 +601,7 @@ function PolicySimulator() {
                       {isSafe ? <CheckCircle className="h-5 w-5 text-emerald-600" /> : <ShieldAlert className="h-5 w-5 text-rose-600" />}
                       <span className={`text-sm font-extrabold ${isSafe ? 'text-emerald-700' : 'text-rose-700'}`}>{isSafe ? 'SAFE' : 'DO NOT USE'}</span>
                     </div>
-                    {!isSafe && (
-                      <p className="mt-2 text-xs font-medium text-rose-800 leading-tight">{chem.reason}</p>
-                    )}
+                    {!isSafe && <p className="mt-2 text-xs font-medium text-rose-800 leading-tight">{chem.reason}</p>}
                   </div>
                 </article>
               );
@@ -725,42 +610,24 @@ function PolicySimulator() {
         ))}
       </div>
 
-      {/* NEW: Bottom Section - Safe Alternatives & Live Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-        
-        {/* Safe Alternatives Card */}
         <div className="rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
-            <Info className="h-5 w-5 text-blue-600" /> 
-            Recommended Safe Alternatives
-          </h3>
-          <p className="text-sm text-slate-600 mb-4">
-            If Mancozeb is restricted in your destination market, ResidueGuard automatically suggests compliant alternatives with similar efficacy.
-          </p>
+          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4"><Info className="h-5 w-5 text-blue-600" /> Recommended Safe Alternatives</h3>
+          <p className="text-sm text-slate-600 mb-4">If Mancozeb is restricted in your destination market, ResidueGuard automatically suggests compliant alternatives with similar efficacy.</p>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
-              <div>
-                <p className="font-semibold text-slate-900 text-sm">Switch to: <span className="text-emerald-700">Propiconazole</span></p>
-                <p className="text-xs text-slate-500">Approved in EU & Japan. MRL: 0.05 mg/kg.</p>
-              </div>
+              <div><p className="font-semibold text-slate-900 text-sm">Switch to: <span className="text-emerald-700">Propiconazole</span></p><p className="text-xs text-slate-500">Approved in EU & Japan. MRL: 0.05 mg/kg.</p></div>
               <ArrowRight className="h-5 w-5 text-slate-400" />
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
-              <div>
-                <p className="font-semibold text-slate-900 text-sm">Switch to: <span className="text-emerald-700">Difenoconazole</span></p>
-                <p className="text-xs text-slate-500">Approved in EU. MRL: 0.01 mg/kg (Default).</p>
-              </div>
+              <div><p className="font-semibold text-slate-900 text-sm">Switch to: <span className="text-emerald-700">Difenoconazole</span></p><p className="text-xs text-slate-500">Approved in EU. MRL: 0.01 mg/kg (Default).</p></div>
               <ArrowRight className="h-5 w-5 text-slate-400" />
             </div>
           </div>
         </div>
 
-        {/* Live Alerts Feed */}
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
-            <AlertTriangle className="h-5 w-5 text-amber-500" /> 
-            Recent Global Rejections (RASFF Feed)
-          </h3>
+          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4"><AlertTriangle className="h-5 w-5 text-amber-500" /> Recent Global Rejections (RASFF Feed)</h3>
           <div className="space-y-4">
             <div className="border-l-2 border-rose-500 pl-3">
               <p className="text-sm font-semibold text-slate-900">EU Rejects Indian Grapes</p>
@@ -779,7 +646,6 @@ function PolicySimulator() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -796,7 +662,6 @@ function DataMoat() {
     return haystack.includes(needle);
   });
 
-  // Dynamically calculate stats from the mockData
   const totalCrops = new Set(chemicalDatabase.map(d => d.crop)).size;
   const totalChemicals = new Set(chemicalDatabase.map(d => d.activeIngredient)).size;
   const bannedInEU = chemicalDatabase.filter(d => !d.euApproved).length;
@@ -810,27 +675,13 @@ function DataMoat() {
         <p className="mt-1 max-w-2xl text-sm text-slate-600">{t("moat.subtitle")}</p>
       </div>
 
-      {/* NEW: Dynamic KPI Cards */}
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Crops Tracked</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900">{totalCrops}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Chemicals</p>
-          <p className="mt-2 text-3xl font-bold text-slate-900">{totalChemicals}</p>
-        </div>
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">Banned in EU</p>
-          <p className="mt-2 text-3xl font-bold text-rose-700">{bannedInEU}</p>
-        </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">High Toxicity (WHO)</p>
-          <p className="mt-2 text-3xl font-bold text-amber-700">{highToxicity}</p>
-        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Crops Tracked</p><p className="mt-2 text-3xl font-bold text-slate-900">{totalCrops}</p></div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Chemicals</p><p className="mt-2 text-3xl font-bold text-slate-900">{totalChemicals}</p></div>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 shadow-sm"><p className="text-xs font-semibold uppercase tracking-wider text-rose-700">Banned in EU</p><p className="mt-2 text-3xl font-bold text-rose-700">{bannedInEU}</p></div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm"><p className="text-xs font-semibold uppercase tracking-wider text-amber-700">High Toxicity (WHO)</p><p className="mt-2 text-3xl font-bold text-amber-700">{highToxicity}</p></div>
       </section>
 
-      {/* Existing Search and Table */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <label className="relative block">
           <span className="sr-only">{t("moat.search")}</span>
@@ -842,24 +693,14 @@ function DataMoat() {
           <table className="w-full min-w-[40rem] text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                <th className="px-3 py-3 font-semibold">Crop</th>
-                <th className="px-3 py-3 font-semibold">Active Ingredient</th>
-                <th className="px-3 py-3 font-semibold">PHI (Days)</th>
-                <th className="px-3 py-3 font-semibold">EU MRL</th>
-                <th className="px-3 py-3 font-semibold">EU Approved</th>
-                <th className="px-3 py-3 font-semibold">WHO Class</th>
+                <th className="px-3 py-3 font-semibold">Crop</th><th className="px-3 py-3 font-semibold">Active Ingredient</th><th className="px-3 py-3 font-semibold">PHI (Days)</th><th className="px-3 py-3 font-semibold">EU MRL</th><th className="px-3 py-3 font-semibold">EU Approved</th><th className="px-3 py-3 font-semibold">WHO Class</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, idx) => (
                 <tr key={`${row.crop}-${row.activeIngredient}-${idx}`} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="px-3 py-3 font-medium">{row.crop}</td>
-                  <td className="px-3 py-3">{row.activeIngredient}</td>
-                  <td className="px-3 py-3 tabular-nums">{row.phi}</td>
-                  <td className="px-3 py-3 tabular-nums">{formatMrl(row.euMRL)}</td>
-                  <td className="px-3 py-3">
-                    {row.euApproved ? <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">YES</span> : <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-800">NO</span>}
-                  </td>
+                  <td className="px-3 py-3 font-medium">{row.crop}</td><td className="px-3 py-3">{row.activeIngredient}</td><td className="px-3 py-3 tabular-nums">{row.phi}</td><td className="px-3 py-3 tabular-nums">{formatMrl(row.euMRL)}</td>
+                  <td className="px-3 py-3">{row.euApproved ? <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">YES</span> : <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-800">NO</span>}</td>
                   <td className="px-3 py-3 text-xs text-slate-600">{row.whoClass}</td>
                 </tr>
               ))}
@@ -870,27 +711,14 @@ function DataMoat() {
         <p className="mt-3 text-xs text-slate-500">Showing {rows.length} of {chemicalDatabase.length} verified records.</p>
       </div>
 
-      {/* NEW: "Why this is a Moat" Section */}
       <section className="mt-8 rounded-xl border border-blue-200 bg-blue-50 p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-          <Database className="h-5 w-5" /> Why This Database is Our Competitive Moat
-        </h2>
+        <h2 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2"><Database className="h-5 w-5" /> Why This Database is Our Competitive Moat</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <h3 className="font-semibold text-blue-800 mb-1">Regulatory Agility</h3>
-            <p className="text-sm text-blue-700">Continuously synced with FSSAI gazettes, EU RASFF alerts, and US FDA import refusals. When laws change, our math updates instantly.</p>
-          </div>
-          <div>
-            <h3 className="font-semibold text-blue-800 mb-1">First-Order Kinetics</h3>
-            <p className="text-sm text-blue-700">We don't just list limits. We track real-world DT50 half-life values to accurately model how chemicals degrade over time in the field.</p>
-          </div>
-          <div>
-            <h3 className="font-semibold text-blue-800 mb-1">Toxicity Intelligence</h3>
-            <p className="text-sm text-blue-700">Every chemical is cross-referenced with the WHO Hazard Classification. We protect farmers from handling Class Ia and Ib toxic substances.</p>
-          </div>
+          <div><h3 className="font-semibold text-blue-800 mb-1">Regulatory Agility</h3><p className="text-sm text-blue-700">Continuously synced with FSSAI gazettes, EU RASFF alerts, and US FDA import refusals. When laws change, our math updates instantly.</p></div>
+          <div><h3 className="font-semibold text-blue-800 mb-1">First-Order Kinetics</h3><p className="text-sm text-blue-700">We don't just list limits. We track real-world DT50 half-life values to accurately model how chemicals degrade over time in the field.</p></div>
+          <div><h3 className="font-semibold text-blue-800 mb-1">Toxicity Intelligence</h3><p className="text-sm text-blue-700">Every chemical is cross-referenced with the WHO Hazard Classification. We protect farmers from handling Class Ia and Ib toxic substances.</p></div>
         </div>
       </section>
-
     </div>
   );
 }
@@ -899,10 +727,7 @@ function Kpi({ label, value, icon, tone, onClick }: { label: string; value: stri
   const toneClass = { slate: "bg-slate-100 text-slate-700", emerald: "bg-emerald-50 text-emerald-700", amber: "bg-amber-50 text-amber-700", rose: "bg-rose-50 text-rose-700" }[tone];
   return (
     <article onClick={onClick} className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${onClick ? 'cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all' : ''}`}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${toneClass}`}>{icon}</span>
-      </div>
+      <div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p><span className={`flex h-8 w-8 items-center justify-center rounded-lg ${toneClass}`}>{icon}</span></div>
       <p className="mt-3 text-3xl font-bold tabular-nums tracking-tight">{value}</p>
       {onClick && <p className="text-[10px] text-emerald-600 mt-1 font-semibold">Click to view</p>}
     </article>
@@ -915,40 +740,23 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: ReactNod
 
 function NumberField({ id, label, value, step, onChange }: { id: string; label: string; value: string; step: string; onChange: (value: string) => void; }) {
   return (
-    <div>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <input id={id} type="number" inputMode="decimal" min="0" step={step} value={value} onChange={(event) => onChange(event.target.value)} className={`${CONTROL} tabular-nums`} />
-    </div>
+    <div><FieldLabel htmlFor={id}>{label}</FieldLabel><input id={id} type="number" inputMode="decimal" min="0" step={step} value={value} onChange={(event) => onChange(event.target.value)} className={`${CONTROL} tabular-nums`} /></div>
   );
 }
 
 function SpecItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</dt>
-      <dd className="mt-0.5 font-semibold tabular-nums text-slate-900">{value}</dd>
-    </div>
-  );
+  return <div><dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</dt><dd className="mt-0.5 font-semibold tabular-nums text-slate-900">{value}</dd></div>;
 }
 
 function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</dt>
-      <dd className="mt-1 text-sm font-semibold text-slate-900">{value}</dd>
-    </div>
-  );
+  return <div><dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</dt><dd className="mt-1 text-sm font-semibold text-slate-900">{value}</dd></div>;
 }
 
 function QrMark({ value }: { value: string }) {
   const size = 21;
   const cells: boolean[] = [];
   for (let row = 0; row < size; row += 1) { for (let col = 0; col < size; col += 1) { cells.push(qrModule(value, row, col, size)); } }
-  return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="h-28 w-28 shrink-0 rounded-md border border-slate-200 bg-white p-1 text-slate-900" role="img" aria-label={`QR mark for ${value}`}>
-      {cells.map((on, index) => on ? <rect key={index} x={index % size} y={Math.floor(index / size)} width="1" height="1" fill="currentColor" /> : null)}
-    </svg>
-  );
+  return <svg viewBox={`0 0 ${size} ${size}`} className="h-28 w-28 shrink-0 rounded-md border border-slate-200 bg-white p-1 text-slate-900" role="img" aria-label={`QR mark for ${value}`}>{cells.map((on, index) => on ? <rect key={index} x={index % size} y={Math.floor(index / size)} width="1" height="1" fill="currentColor" /> : null)}</svg>;
 }
 
 function qrModule(value: string, row: number, col: number, size: number): boolean {
