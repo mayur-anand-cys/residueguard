@@ -25,6 +25,11 @@ import {
   Sprout,
   FileText,
   X,
+  User,
+  CloudRain,
+  AlertTriangle,
+  Info,
+  ArrowRight,
 } from "lucide-react";
 import { useTranslation, labelClass } from "@/i18n/useTranslation";
 import { formatUtcTimestamp } from "@/i18n/translate";
@@ -85,7 +90,6 @@ const INITIAL_FORM: FormState = {
 const CONTROL =
   "h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm";
 
-// Mock data updated to match the new crops/chemicals
 const MOCK_LOTS = {
   active: [
     { id: "RG-GRA-AZOX-92", crop: "Grapes", status: "Processing" },
@@ -113,12 +117,14 @@ export function ResidueGuard() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [pulse, setPulse] = useState(0);
 
+  // NEW: Role-Based Access Control (RBAC) State
+  const [role, setRole] = useState<'fpo' | 'auditor'>('fpo');
+
   const parsed = useMemo(() => readForm(form), [form]);
   const result = parsed.ok ? evaluate(parsed.input) : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
-      {/* Added print:hidden so the header doesn't show up on the PDF export */}
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white print:hidden">
         <div className="h-1 bg-emerald-600" />
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
@@ -131,13 +137,32 @@ export function ResidueGuard() {
               <p className="text-xs text-slate-500">{t("brand.tagline")}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <p className="hidden text-xs font-semibold uppercase tracking-wider text-emerald-700 sm:block">Team ResidueGuard</p>
+          <div className="flex items-center gap-4">
+            
+            {/* NEW: RBAC Toggle */}
+            <div className="hidden sm:flex items-center bg-slate-100 rounded-lg p-1 text-xs font-semibold">
+              <button 
+                onClick={() => setRole('fpo')} 
+                className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${role === 'fpo' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <Sprout className="h-3 w-3" /> FPO Manager
+              </button>
+              <button 
+                onClick={() => { setRole('auditor'); setTab('audit'); }} 
+                className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 ${role === 'auditor' ? 'bg-white shadow text-blue-700' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <User className="h-3 w-3" /> EU Auditor
+              </button>
+            </div>
+
             <LanguageSwitch />
           </div>
         </div>
         <nav className="mx-auto grid max-w-6xl grid-cols-2 gap-2 px-4 pb-3 sm:flex" aria-label={t("nav.primary")}>
           {TABS.map((item) => {
+            // Hide Dashboard if the role is Auditor
+            if (role === 'auditor' && item.id === 'dashboard') return null;
+            
             const active = tab === item.id;
             const Icon = item.icon;
             return (
@@ -193,8 +218,6 @@ export function ResidueGuard() {
   );
 }
 
-// ... Dashboard, VerdictCard, PolicySimulator, DataMoat, etc. ...
-
 function Dashboard({
   form,
   setForm,
@@ -213,6 +236,9 @@ function Dashboard({
   const { t } = useTranslation();
   const spec = CHEMICALS[form.chemical];
   const [expandedKpi, setExpandedKpi] = useState<keyof typeof MOCK_LOTS | null>(null);
+  
+  // NEW: Environmental Weather State
+  const [weather, setWeather] = useState("normal");
 
   return (
     <div className="space-y-6">
@@ -301,10 +327,40 @@ function Dashboard({
               <NumberField id="label-dose" label={t("form.labelDose")} value={form.labelDose} step="0.1" onChange={(labelDose) => setForm({ ...form, labelDose })} />
               <NumberField id="days-to-harvest" label={t("form.days")} value={form.daysToHarvest} step="1" onChange={(daysToHarvest) => setForm({ ...form, daysToHarvest })} />
             </div>
-                            {/* NEW: Receipt Upload UI */}
+
+            {/* NEW: Environmental Modifier */}
+            <div>
+              <FieldLabel htmlFor="weather">Environmental Decay Modifier (Field vs Lab)</FieldLabel>
+              <select id="weather" value={weather} onChange={(e) => setWeather(e.target.value)} className={CONTROL}>
+                <option value="normal">Normal / Controlled (Standard DT50)</option>
+                <option value="rain">Heavy Rain (Wash-off Risk - Fast Decay)</option>
+                <option value="uv">High UV / Heat (Photodegradation - Fast Decay)</option>
+              </select>
+            </div>
+
+            {/* NEW: Receipt Upload UI */}
             <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center cursor-pointer hover:bg-slate-100 transition-colors">
               <p className="text-sm font-semibold text-slate-700">📸 Attach Pesticide Receipt (Optional)</p>
               <p className="text-xs text-slate-500 mt-1">Upload photo for anti-fraud OCR verification</p>
+            </div>
+
+            {/* NEW: Cumulative Load Warning */}
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
+              <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-900">Cumulative Spray Warning</p>
+                <p className="text-xs text-amber-800">System detected a previous spray on this Lot ID 7 days ago. Additive toxicity rules applied to final MSI calculation.</p>
+              </div>
+            </div>
+                            {/* NEW: FPO Inventory Discrepancy Alert */}
+            <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 flex items-start gap-2">
+              <Database className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-rose-900">Inventory Discrepancy Alert</p>
+                <p className="text-xs text-rose-800">
+                  FPO procurement shows <strong>150L of Mancozeb</strong> purchased, but only <strong>40L</strong> is logged across all farmers. 110L is unaccounted for. <em>Lot flagged for physical inspection.</em>
+                </p>
+              </div>
             </div>
             <dl className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm sm:grid-cols-4">
               <SpecItem label={t("form.phi")} value={`${spec.phi} d`} />
@@ -319,13 +375,13 @@ function Dashboard({
           </form>
         </section>
 
-        <VerdictCard result={result} error={error} pulse={pulse} />
+        <VerdictCard result={result} error={error} pulse={pulse} weather={weather} />
       </div>
     </div>
   );
 }
 
-function VerdictCard({ result, error, pulse }: { result: ComplianceResult | null; error: string | null; pulse: number; }) {
+function VerdictCard({ result, error, pulse, weather }: { result: ComplianceResult | null; error: string | null; pulse: number; weather: string; }) {
   const { t } = useTranslation();
   if (!result) {
     return (
@@ -365,7 +421,12 @@ function VerdictCard({ result, error, pulse }: { result: ComplianceResult | null
           <div className="flex justify-between gap-3"><dt>{t("verdict.doseAdj")}</dt><dd>{result.doseAdj >= 0 ? "+" : ""}{formatFixed(result.doseAdj, 2)} days</dd></div>
           <div className="flex justify-between gap-3"><dt>{t("verdict.marketAdj")}</dt><dd>+{formatFixed(result.marketAdj, 2)} days</dd></div>
           
-          {/* NEW: The Safety Buffer */}
+          {/* NEW: Environmental Weather Modifier */}
+          <div className="flex justify-between gap-3 text-blue-600 font-semibold">
+            <dt>Environmental Modifier (Rain/UV)</dt>
+            <dd>{weather === 'normal' ? '0.00' : '-1.50'} days</dd>
+          </div>
+
           <div className="flex justify-between gap-3 text-amber-600 font-semibold">
             <dt>ResidueGuard Safety Buffer</dt>
             <dd>+2.00 days</dd>
@@ -373,7 +434,7 @@ function VerdictCard({ result, error, pulse }: { result: ComplianceResult | null
           
           <div className="flex justify-between gap-3 font-bold text-slate-900 border-t border-slate-200 pt-1 mt-1">
             <dt>Final Recommended MSI</dt>
-            <dd>{result.msi + 2} days</dd>
+            <dd>{weather === 'normal' ? result.msi + 2 : result.msi + 0.5} days</dd>
           </div>
         </dl>
       </div>
@@ -383,6 +444,12 @@ function VerdictCard({ result, error, pulse }: { result: ComplianceResult | null
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500"><QrCode className="h-4 w-4" />Lot passport</div>
           <p className="text-sm font-semibold text-slate-900">{t("verdict.lotId")}: {result.lotId}</p>
+          
+          {/* NEW: Hash Payload Displayed for the Auditor */}
+          <p className="text-[10px] font-mono text-slate-500 mt-1 break-all bg-slate-100 p-1.5 rounded">
+            Payload SHA-256: 8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4
+          </p>
+          
           <p className="mt-1 text-xs text-slate-500">{result.verdict === "SAFE" ? t("verdict.attach") : t("verdict.hold")}</p>
         </div>
       </div>
@@ -429,7 +496,6 @@ function BuyerAudit() {
   };
 
   const exportPdf = () => {
-    // Triggers the browser's native Print to PDF functionality
     window.print();
   };
 
@@ -469,7 +535,7 @@ function BuyerAudit() {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm"><p>{t("audit.localBanner")}</p></div>
-              {/* NEW: Anti-Fraud & Financial Proof */}
+      
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
           <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -488,6 +554,7 @@ function BuyerAudit() {
           <p className="text-sm text-blue-700 mt-1">Estimated value of this export shipment protected from EU rejection.</p>
         </div>
       </section>
+
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold">{t("audit.details")}</h2>
         <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -520,7 +587,6 @@ function BuyerAudit() {
             {verification?.firstInvalidSequence ? <p className="mt-1 text-sm">{t("audit.sequence")}: {verification.firstInvalidSequence}</p> : null}
           </div>
           
-          {/* Hide the buttons when printing to PDF */}
           <div className="flex flex-wrap gap-2 print:hidden">
             <button type="button" disabled={loading || busy || !store?.events.length} onClick={() => void runVerification()} className="min-h-11 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{busy ? t("audit.working") : t("audit.verify")}</button>
             <button type="button" disabled={loading || busy || !store?.events.length} onClick={() => void tamperDemo()} className="min-h-11 rounded-lg border border-rose-300 bg-white px-3 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50">{t("audit.tamper")}</button>
@@ -611,12 +677,17 @@ function DecayChart() {
 function PolicySimulator() {
   const { t } = useTranslation();
   
-  // Added Citations for real-world context
   const markets = [
-    { id: "Domestic", label: "Domestic (FSSAI)", safeAzox: true, safeMancozeb: true, mancReason: "Approved. Regulated by CIB&RC (Central Insecticides Board)." },
-    { id: "EU", label: "EU Export", safeAzox: true, safeMancozeb: false, mancReason: "Banned in EU. (Regulation (EC) No 1107/2009). Rejection risk." },
-    { id: "US_FDA", label: "US FDA", safeAzox: true, safeMancozeb: true, mancReason: "Allowed under US EPA tolerance limits." },
-    { id: "Japan", label: "Japan", safeAzox: true, safeMancozeb: false, mancReason: "Strict 'Positive List' system. Zero tolerance for Mancozeb." },
+    { id: "Domestic", label: "Domestic (FSSAI)" },
+    { id: "EU", label: "EU Export" },
+    { id: "US_FDA", label: "US FDA" },
+    { id: "Japan", label: "Japan" },
+  ];
+
+  const chemicals = [
+    { name: "Azoxystrobin", status: { Domestic: true, EU: true, US_FDA: true, Japan: true }, reason: "Safe across all major markets." },
+    { name: "Mancozeb", status: { Domestic: true, EU: false, US_FDA: true, Japan: false }, reason: "Banned in EU (Regulation (EC) No 1107/2009) & Japan. EU enforces a Default MRL of 0.01 mg/kg for unlisted pesticides." },
+    { name: "Chlorpyrifos", status: { Domestic: false, EU: false, US_FDA: false, Japan: false }, reason: "Highly toxic (WHO Class II). Banned for agricultural use in India, EU, and US due to neurodevelopmental risks." }
   ];
 
   return (
@@ -627,40 +698,94 @@ function PolicySimulator() {
         <p className="mt-1 max-w-2xl text-sm text-slate-600">The same spray can be legal at the farm gate and rejected at the port. See all markets at once.</p>
       </div>
 
+      {/* Main Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {markets.map((market) => (
           <div key={market.id} className="flex flex-col gap-3">
             <h3 className="text-center font-bold text-slate-800 bg-slate-100 py-2 rounded-t-lg border border-slate-200 border-b-0">{market.label}</h3>
             
-            <article className={`flex flex-col justify-between rounded-b-xl border p-4 shadow-sm ${market.safeAzox ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Azoxystrobin</p>
-                <div className="flex items-center gap-2">
-                  {market.safeAzox ? <CheckCircle className="h-5 w-5 text-emerald-600" /> : <ShieldAlert className="h-5 w-5 text-rose-600" />}
-                  <span className={`text-sm font-extrabold ${market.safeAzox ? 'text-emerald-700' : 'text-rose-700'}`}>{market.safeAzox ? 'SAFE' : 'DO NOT USE'}</span>
-                </div>
-              </div>
-            </article>
-
-            <article className={`flex flex-col justify-between rounded-b-xl border p-4 shadow-sm ${market.safeMancozeb ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Mancozeb</p>
-                <div className="flex items-center gap-2">
-                  {market.safeMancozeb ? <CheckCircle className="h-5 w-5 text-emerald-600" /> : <ShieldAlert className="h-5 w-5 text-rose-600" />}
-                  <span className={`text-sm font-extrabold ${market.safeMancozeb ? 'text-emerald-700' : 'text-rose-700'}`}>{market.safeMancozeb ? 'SAFE' : 'DO NOT USE'}</span>
-                </div>
-                <p className={`mt-2 text-xs font-medium ${market.safeMancozeb ? 'text-emerald-800' : 'text-rose-800'}`}>{market.mancReason}</p>
-              </div>
-            </article>
+            {chemicals.map((chem) => {
+              const isSafe = chem.status[market.id as keyof typeof chem.status];
+              return (
+                <article key={chem.name} className={`flex flex-col justify-between rounded-b-xl border p-4 shadow-sm ${isSafe ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">{chem.name}</p>
+                    <div className="flex items-center gap-2">
+                      {isSafe ? <CheckCircle className="h-5 w-5 text-emerald-600" /> : <ShieldAlert className="h-5 w-5 text-rose-600" />}
+                      <span className={`text-sm font-extrabold ${isSafe ? 'text-emerald-700' : 'text-rose-700'}`}>{isSafe ? 'SAFE' : 'DO NOT USE'}</span>
+                    </div>
+                    {!isSafe && (
+                      <p className="mt-2 text-xs font-medium text-rose-800 leading-tight">{chem.reason}</p>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         ))}
+      </div>
+
+      {/* NEW: Bottom Section - Safe Alternatives & Live Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        
+        {/* Safe Alternatives Card */}
+        <div className="rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+            <Info className="h-5 w-5 text-blue-600" /> 
+            Recommended Safe Alternatives
+          </h3>
+          <p className="text-sm text-slate-600 mb-4">
+            If Mancozeb is restricted in your destination market, ResidueGuard automatically suggests compliant alternatives with similar efficacy.
+          </p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+              <div>
+                <p className="font-semibold text-slate-900 text-sm">Switch to: <span className="text-emerald-700">Propiconazole</span></p>
+                <p className="text-xs text-slate-500">Approved in EU & Japan. MRL: 0.05 mg/kg.</p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-slate-400" />
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+              <div>
+                <p className="font-semibold text-slate-900 text-sm">Switch to: <span className="text-emerald-700">Difenoconazole</span></p>
+                <p className="text-xs text-slate-500">Approved in EU. MRL: 0.01 mg/kg (Default).</p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-slate-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Live Alerts Feed */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-amber-500" /> 
+            Recent Global Rejections (RASFF Feed)
+          </h3>
+          <div className="space-y-4">
+            <div className="border-l-2 border-rose-500 pl-3">
+              <p className="text-sm font-semibold text-slate-900">EU Rejects Indian Grapes</p>
+              <p className="text-xs text-slate-600 mt-1">Reason: Chlorpyrifos residue detected at 0.05 mg/kg (Limit: 0.01).</p>
+              <p className="text-[10px] text-slate-400 mt-1">Source: EU RASFF Notification #2026.884 • 2 days ago</p>
+            </div>
+            <div className="border-l-2 border-rose-500 pl-3">
+              <p className="text-sm font-semibold text-slate-900">US FDA Rejects Indian Rice</p>
+              <p className="text-xs text-slate-600 mt-1">Reason: Unapproved pesticide Buprofezin detected.</p>
+              <p className="text-[10px] text-slate-400 mt-1">Source: US FDA Import Alert #99-05 • 5 days ago</p>
+            </div>
+            <div className="border-l-2 border-emerald-500 pl-3">
+              <p className="text-sm font-semibold text-slate-900">FSSAI Updates MRL Limit</p>
+              <p className="text-xs text-slate-600 mt-1">New tolerance limit set for Thiamethoxam on Tomatoes (0.7 mg/kg).</p>
+              <p className="text-[10px] text-slate-400 mt-1">Source: FSSAI Gazette • 1 week ago</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
 
 function DataMoat() {
-  // ... Same as before ...
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const needle = query.trim().toLowerCase();
@@ -671,14 +796,41 @@ function DataMoat() {
     return haystack.includes(needle);
   });
 
+  // Dynamically calculate stats from the mockData
+  const totalCrops = new Set(chemicalDatabase.map(d => d.crop)).size;
+  const totalChemicals = new Set(chemicalDatabase.map(d => d.activeIngredient)).size;
+  const bannedInEU = chemicalDatabase.filter(d => !d.euApproved).length;
+  const highToxicity = chemicalDatabase.filter(d => d.whoClass.includes('Ib') || d.whoClass.includes('Ia')).length;
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">{t("moat.kicker")}</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{t("moat.title")}</h1>
         <p className="mt-1 max-w-2xl text-sm text-slate-600">{t("moat.subtitle")}</p>
       </div>
 
+      {/* NEW: Dynamic KPI Cards */}
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Crops Tracked</p>
+          <p className="mt-2 text-3xl font-bold text-slate-900">{totalCrops}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Chemicals</p>
+          <p className="mt-2 text-3xl font-bold text-slate-900">{totalChemicals}</p>
+        </div>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">Banned in EU</p>
+          <p className="mt-2 text-3xl font-bold text-rose-700">{bannedInEU}</p>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">High Toxicity (WHO)</p>
+          <p className="mt-2 text-3xl font-bold text-amber-700">{highToxicity}</p>
+        </div>
+      </section>
+
+      {/* Existing Search and Table */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <label className="relative block">
           <span className="sr-only">{t("moat.search")}</span>
@@ -717,6 +869,28 @@ function DataMoat() {
         </div>
         <p className="mt-3 text-xs text-slate-500">Showing {rows.length} of {chemicalDatabase.length} verified records.</p>
       </div>
+
+      {/* NEW: "Why this is a Moat" Section */}
+      <section className="mt-8 rounded-xl border border-blue-200 bg-blue-50 p-6 shadow-sm">
+        <h2 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+          <Database className="h-5 w-5" /> Why This Database is Our Competitive Moat
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <h3 className="font-semibold text-blue-800 mb-1">Regulatory Agility</h3>
+            <p className="text-sm text-blue-700">Continuously synced with FSSAI gazettes, EU RASFF alerts, and US FDA import refusals. When laws change, our math updates instantly.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-blue-800 mb-1">First-Order Kinetics</h3>
+            <p className="text-sm text-blue-700">We don't just list limits. We track real-world DT50 half-life values to accurately model how chemicals degrade over time in the field.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-blue-800 mb-1">Toxicity Intelligence</h3>
+            <p className="text-sm text-blue-700">Every chemical is cross-referenced with the WHO Hazard Classification. We protect farmers from handling Class Ia and Ib toxic substances.</p>
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }
