@@ -63,3 +63,22 @@ Follow these exact steps to run the ResidueGuard dashboard on your local machine
 Windows PowerShell blocks scripts by default, which will cause `npm` and `npx` to fail. Run this exact command in your terminal first:
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+``` 
+### Step 3: Install Dependencies
+Run this command to install the necessary packages:
+
+```powershell
+npm install
+```
+### Step 4: Start the Server on Port 8080
+To bypass any custom wrapper script errors (like spawn vite ENOENT), use this direct command to launch the Vite server on port 8080:
+
+```powershell
+npx vite --host 0.0.0.0 --port 8080
+```
+### Step 5: Open the Dashboard
+Once the terminal displays VITE ready in XXX ms, open your web browser (Chrome, Edge, etc.) and navigate to:
+
+👉 http://localhost:8080
+
+You will be greeted with the FPO Dashboard. From there, explore the Buyer Audit (to test the SHA-256 hash), the Policy Simulator, and the Data Moat!
