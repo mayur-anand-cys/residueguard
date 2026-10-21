@@ -25,6 +25,22 @@ ResidueGuard shifts agriculture from reactive loss to proactive compliance throu
 
 ---
 
+## 📸 Application Showcase
+
+### 1. FPO Dashboard: Predictive Intelligence
+![FPO Dashboard](screenshots/dashboard.png)
+*Shows the Delay Harvest verdict, Environmental Weather Modifier, and Inventory Anti-Fraud alerts.*
+
+### 2. Buyer Audit: Cryptographic Verification
+![Buyer Audit](screenshots/audit.png)
+*Shows the SHA-256 Audit Chain Verified, Anti-Fraud pipeline, and Financial Risk avoided.*
+
+### 3. Policy Simulator: Global Market Trap
+![Policy Simulator](screenshots/policy.png)
+*Shows Mancozeb and Chlorpyrifos flagged as banned in the EU, Japan, and US.*
+
+---
+
 ## 🚀 Key Enterprise Features (The "Judge Killers")
 This prototype isn't just a UI; it's built with real-world defensive logic:
 * **Role-Based Access Control (RBAC):** Toggle between "FPO Manager" and "EU Auditor" in the top right. Auditors are locked out of the data entry dashboard and can only verify the cryptographic chain.
